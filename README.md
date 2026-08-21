@@ -5,7 +5,7 @@
 Spring Boot 3 · Java 21 · Kafka · Redis · PostgreSQL · Docker
 
 ```bash
-git clone <repo> && cd hookrelay
+git clone https://github.com/yasinakciljvt/hookrelay.git && cd hookrelay
 ./scripts/baslat.sh     # her şeyi derler, ayağa kaldırır, hazır olana kadar bekler
 ./scripts/demo.sh       # 1 uygulama + 4 endpoint kurar, 40 olay gönderir
 ```
