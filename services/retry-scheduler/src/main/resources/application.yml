@@ -1,0 +1,51 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: retry-scheduler
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  autoconfigure:
+    # Bu serviste veritabani YOK. Kendi durumu yok, sadece mesaj tasiyor.
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+
+hookrelay:
+  scheduler:
+    group: retry-scheduler
+    poll-ms: 500
+  endpoint-config:
+    replicate: false
+  app-config:
+    replicate: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      service: retry-scheduler
+
+logging:
+  level:
+    dev.hookrelay: INFO
