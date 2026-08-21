@@ -267,7 +267,7 @@ En yoğun yorumlar en çok kanadığım yerlerde:
 [`HttpClientDnsConfig`](services/gateway/src/main/java/dev/hookrelay/gateway/HttpClientDnsConfig.java) (Docker DNS önbelleği).
 
 Kurallar [`CONTRIBUTING.md`](CONTRIBUTING.md) içinde. Uzun anlatım kodda değil,
-[74 sayfalık rehberde](docs/HookRelay-Sifirdan-Insa-Rehberi.pdf).
+[75 sayfalık rehberde](docs/HookRelay-Sifirdan-Insa-Rehberi.pdf).
 
 ## Gözden geçirme turu
 
@@ -298,7 +298,7 @@ Her biri kodda gerekçesiyle yazılı — "unutulmuş" değil, "seçilmiş".
 
 ## Rehber
 
-Projeyi sıfırdan kendiniz inşa etmek için adım adım rehber: [`docs/HookRelay-Sifirdan-Insa-Rehberi.pdf`](docs/HookRelay-Sifirdan-Insa-Rehberi.pdf) (67 sayfa)
+Projeyi sıfırdan kendiniz inşa etmek için adım adım rehber: [`docs/HookRelay-Sifirdan-Insa-Rehberi.pdf`](docs/HookRelay-Sifirdan-Insa-Rehberi.pdf) — 75 sayfa, 17 bölüm
 
 ## Lisans
 
