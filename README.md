@@ -1,5 +1,9 @@
 # HookRelay
 
+[![CI](https://github.com/yasinakciljvt/hookrelay/actions/workflows/ci.yml/badge.svg)](https://github.com/yasinakciljvt/hookrelay/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
+
 **Güvenilir webhook teslimat servisi.** Bir olayı müşterinin sunucusuna, o sunucu çökse, yavaşlasa, 429 dönse veya üç saat kapalı kalsa bile teslim eder.
 
 Spring Boot 3 · Java 21 · Kafka · Redis · PostgreSQL · Docker

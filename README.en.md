@@ -1,5 +1,9 @@
 # HookRelay
 
+[![CI](https://github.com/yasinakciljvt/hookrelay/actions/workflows/ci.yml/badge.svg)](https://github.com/yasinakciljvt/hookrelay/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/projects/jdk/21/)
+
 **A reliable webhook delivery service.** It gets an event to your customer's server — even if that server crashes, stalls, returns 429, or stays down for three hours.
 
 Spring Boot 3 · Java 21 · Kafka · Redis · PostgreSQL · Docker
