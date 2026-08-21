@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: hookrelay
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - admin-api:8081
+          - ingest-api:8082
+          - dispatcher:8083
+          - retry-scheduler:8084
+          - chaos-target:8085
+          - gateway:8080
+    relabel_configs:
+      # instance etiketini "admin-api:8081" yerine "admin-api" yap.
+      # Grafana'da okunakli olmasi disinda pratik bir faydasi da var:
+      # port degisirse gecmis veriyle surekliligi kopmaz.
+      - source_labels: [__address__]
+        regex: '([^:]+):.*'
+        target_label: instance
+        replacement: '$1'

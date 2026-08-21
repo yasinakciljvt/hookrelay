@@ -1,0 +1,7 @@
+**/target
+.git
+.idea
+*.iml
+docs
+ops/grafana/data
+ui/node_modules

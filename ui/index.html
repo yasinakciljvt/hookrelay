@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HookRelay — Kontrol Paneli</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121822; --panel2:#0f151d; --line:#1f2836;
+    --text:#e6edf6; --muted:#8b9bb0; --accent:#39d3a0; --accent2:#4aa8ff;
+    --warn:#f5a524; --danger:#f2555a; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  a{color:var(--accent2);text-decoration:none}
+
+  header{display:flex;align-items:center;gap:20px;padding:14px 22px;
+         border-bottom:1px solid var(--line);background:var(--panel2);
+         position:sticky;top:0;z-index:10;flex-wrap:wrap}
+  .logo{font-weight:700;font-size:17px;letter-spacing:-.3px}
+  .logo span{color:var(--accent)}
+  .stats{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+  .stat{text-align:right}
+  .stat b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+  .stat small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+
+  main{display:grid;grid-template-columns:400px 1fr;gap:16px;padding:16px;
+       align-items:start}
+  @media(max-width:1100px){main{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+        margin-bottom:16px;overflow:hidden}
+  .card h2{margin:0;padding:12px 16px;font-size:13px;text-transform:uppercase;
+           letter-spacing:.7px;color:var(--muted);border-bottom:1px solid var(--line);
+           display:flex;align-items:center;gap:8px}
+  .card h2 .right{margin-left:auto;text-transform:none;letter-spacing:0}
+  .card .body{padding:14px 16px}
+
+  button{background:var(--accent);color:#062018;border:0;border-radius:7px;
+         padding:8px 14px;font-weight:600;cursor:pointer;font-size:13px}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button.ghost:hover{border-color:var(--accent);color:var(--accent)}
+  button.small{padding:4px 9px;font-size:12px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  input,select{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+               border-radius:7px;padding:8px 10px;font-size:13px;width:100%;font-family:inherit}
+  input:focus,select:focus{outline:0;border-color:var(--accent2)}
+  label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;
+        text-transform:uppercase;letter-spacing:.5px}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;
+     letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--line);
+     position:sticky;top:0;background:var(--panel)}
+  td{padding:8px 12px;border-bottom:1px solid var(--panel2)}
+  tr:hover td{background:var(--panel2)}
+
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;
+        font-weight:600;letter-spacing:.3px}
+  .pill.ok{background:rgba(57,211,160,.16);color:var(--accent)}
+  .pill.pending{background:rgba(74,168,255,.16);color:var(--accent2)}
+  .pill.bad{background:rgba(242,85,90,.16);color:var(--danger)}
+  .pill.warn{background:rgba(245,165,36,.16);color:var(--warn)}
+  .pill.mute{background:rgba(139,155,176,.14);color:var(--muted)}
+
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+  .dot.ok{background:var(--accent)} .dot.bad{background:var(--danger)}
+  .dot.warn{background:var(--warn)} .dot.mute{background:var(--muted)}
+
+  code,.mono{font-family:var(--mono);font-size:12px}
+  .muted{color:var(--muted)}
+  .ep{padding:10px 0;border-bottom:1px solid var(--panel2)}
+  .ep:last-child{border-bottom:0}
+  .ep .url{font-family:var(--mono);font-size:11.5px;word-break:break-all;color:var(--muted)}
+  .ep .top{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .ep .top b{font-size:13px}
+
+  .feed{max-height:520px;overflow-y:auto}
+  .scroll{max-height:300px;overflow-y:auto}
+  .empty{padding:26px;text-align:center;color:var(--muted);font-size:13px}
+
+  .key{background:#1a2430;border:1px dashed var(--accent);border-radius:7px;
+       padding:9px 11px;font-family:var(--mono);font-size:11.5px;
+       word-break:break-all;margin-top:8px}
+  .toast{position:fixed;right:18px;bottom:18px;background:var(--panel);
+         border:1px solid var(--accent);border-radius:9px;padding:12px 16px;
+         max-width:380px;box-shadow:0 12px 30px rgba(0,0,0,.5);z-index:100;font-size:13px}
+  .toast.err{border-color:var(--danger)}
+
+  details.detail{background:var(--panel2);border-radius:7px;margin-top:8px;padding:8px 11px}
+  details.detail summary{cursor:pointer;font-size:12px;color:var(--muted)}
+  pre{margin:8px 0 0;font-family:var(--mono);font-size:11px;white-space:pre-wrap;
+      word-break:break-all;color:#c8d6e8;max-height:220px;overflow:auto}
+  .tiers{display:flex;gap:6px;flex-wrap:wrap}
+  .tier{background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+        padding:6px 10px;font-family:var(--mono);font-size:11px}
+  .tier.paused{border-color:var(--warn);color:var(--warn)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Hook<span>Relay</span></div>
+  <div class="muted" style="font-size:12px">Guvenilir webhook teslimat servisi</div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<main>
+  <!-- SOL SUTUN -->
+  <div>
+    <div class="card">
+      <h2>Hizli demo</h2>
+      <div class="body">
+        <p class="muted" style="margin:0 0 10px;font-size:12.5px">
+          Tek tikla bir uygulama ve dort endpoint kurar:
+          saglam, %50 hatali, tamamen olu ve 410 donen.
+        </p>
+        <div class="row">
+          <button onclick="quickSetup()" id="btnSetup">Demoyu kur</button>
+          <button class="ghost" onclick="sendBurst()" id="btnBurst">50 olay gonder</button>
+        </div>
+        <div id="keyBox"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Uygulamalar <span class="right"><button class="small ghost" onclick="newApp()">+ Yeni</button></span></h2>
+      <div class="body" id="apps"><div class="empty">Yukleniyor…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Endpoint'ler <span class="right"><button class="small ghost" onclick="newEndpoint()">+ Yeni</button></span></h2>
+      <div class="body scroll" id="endpoints"><div class="empty">Once bir uygulama secin</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Yeniden deneme zamanlayicisi</h2>
+      <div class="body" id="scheduler"><div class="empty">…</div></div>
+    </div>
+  </div>
+
+  <!-- SAG SUTUN -->
+  <div>
+    <div class="card">
+      <h2>
+        Teslimat gunlugu
+        <span class="right">
+          <select id="filterStatus" onchange="loadDeliveries()" style="width:auto;display:inline-block">
+            <option value="">hepsi</option>
+            <option value="PENDING">bekleyen</option>
+            <option value="SUCCEEDED">basarili</option>
+            <option value="EXHAUSTED">tukenmis</option>
+            <option value="DISCARDED">dusurulmus</option>
+          </select>
+          <button class="small ghost" onclick="replayExhausted()">Tukenmisleri tekrar gonder</button>
+        </span>
+      </h2>
+      <div class="feed">
+        <table>
+          <thead><tr>
+            <th>Durum</th><th>Olay</th><th>Endpoint</th><th>Deneme</th>
+            <th>Son</th><th>Guncelleme</th><th></th>
+          </tr></thead>
+          <tbody id="deliveries"><tr><td colspan="7" class="empty">Yukleniyor…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Chaos hedefi — gelen istekler <span class="right">
+        <button class="small ghost" onclick="clearChaos()">Temizle</button></span></h2>
+      <div class="body scroll" id="chaos"><div class="empty">Henuz istek gelmedi</div></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const api = (p, o) => fetch(p, o).then(async r => {
+  const text = await r.text();
+  const body = text ? JSON.parse(text) : null;
+  if (!r.ok) throw new Error(body?.message || body?.error || r.status);
+  return body;
+});
+
+let state = {
+  appId: localStorage.getItem('hr_appId') || null,
+  apiKey: localStorage.getItem('hr_apiKey') || null,
+  endpoints: [], health: {},
+};
+
+function toast(msg, isErr) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4200);
+}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shortId = id => id ? String(id).slice(0, 8) : '—';
+const ago = ts => {
+  if (!ts) return '—';
+  const d = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (d < 60) return d + ' sn';
+  if (d < 3600) return Math.floor(d / 60) + ' dk';
+  return Math.floor(d / 3600) + ' sa';
+};
+
+// ---------------------------------------------------------------- demo
+async function quickSetup() {
+  const btn = document.getElementById('btnSetup');
+  btn.disabled = true;
+  try {
+    const name = 'demo-' + Math.random().toString(36).slice(2, 7);
+    const created = await api('/api/admin/applications', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name}),
+    });
+    state.appId = created.application.id;
+    state.apiKey = created.apiKey;
+    localStorage.setItem('hr_appId', state.appId);
+    localStorage.setItem('hr_apiKey', state.apiKey);
+
+    const targets = [
+      ['http://chaos-target:8085/sink/ok',            'Saglam — her zaman 200',            0],
+      ['http://chaos-target:8085/sink/flaky?rate=50', '%50 hatali — yeniden denemeyi gorun', 0],
+      ['http://chaos-target:8085/sink/dead',          'Olu — devre kesiciyi acar',          0],
+      ['http://chaos-target:8085/sink/gone',          '410 Gone — kalici hata, direkt DLQ', 0],
+    ];
+    for (const [url, description, rl] of targets) {
+      await api(`/api/admin/applications/${state.appId}/endpoints`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({url, description, eventTypes: ['*'], rateLimitPerSecond: rl}),
+      });
+    }
+    document.getElementById('keyBox').innerHTML =
+      `<div class="key"><b>API anahtari</b><br>${esc(state.apiKey)}</div>`;
+    toast('Demo kuruldu: 1 uygulama, 4 endpoint. Simdi "50 olay gonder"e basin.');
+    refreshAll();
+  } catch (e) { toast('Hata: ' + e.message, true); }
+  finally { btn.disabled = false; }
+}
+
+async function sendBurst() {
+  if (!state.apiKey) return toast('Once demoyu kurun (API anahtari lazim)', true);
+  const btn = document.getElementById('btnBurst');
+  btn.disabled = true;
+  const types = ['order.created','order.paid','user.updated','invoice.finalized'];
+  let sent = 0;
+  try {
+    await Promise.all(Array.from({length: 50}, (_, i) =>
+      api('/v1/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + state.apiKey,
+          'Idempotency-Key': 'ui-' + Date.now() + '-' + i,
+        },
+        body: JSON.stringify({
+          eventType: types[i % types.length],
+          payload: {no: i, tutar: (Math.random()*1000).toFixed(2), birim: 'TRY'},
+        }),
+      }).then(() => sent++).catch(() => {})
+    ));
+    toast(`${sent} olay kabul edildi. 4 endpoint'e ${sent*4} teslimat uretildi.`);
+    setTimeout(refreshAll, 600);
+  } finally { btn.disabled = false; }
+}
+
+// ---------------------------------------------------------------- uygulamalar
+async function newApp() {
+  const name = prompt('Uygulama adi:');
+  if (!name) return;
+  try {
+    const c = await api('/api/admin/applications', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name}),
+    });
+    state.appId = c.application.id; state.apiKey = c.apiKey;
+    localStorage.setItem('hr_appId', state.appId);
+    localStorage.setItem('hr_apiKey', state.apiKey);
+    document.getElementById('keyBox').innerHTML =
+      `<div class="key"><b>API anahtari (bir daha gosterilmez)</b><br>${esc(c.apiKey)}</div>`;
+    refreshAll();
+  } catch (e) { toast('Hata: ' + e.message, true); }
+}
+
+async function loadApps() {
+  const apps = await api('/api/admin/applications');
+  const box = document.getElementById('apps');
+  if (!apps.length) { box.innerHTML = '<div class="empty">Henuz uygulama yok</div>'; return; }
+  if (!state.appId || !apps.find(a => a.id === state.appId)) {
+    state.appId = apps[0].id;
+    localStorage.setItem('hr_appId', state.appId);
+  }
+  box.innerHTML = apps.map(a => `
+    <div class="ep">
+      <div class="top">
+        <span class="dot ${a.enabled ? 'ok' : 'mute'}"></span>
+        <b>${esc(a.name)}</b>
+        ${a.id === state.appId ? '<span class="pill ok">secili</span>' : ''}
+        <span class="right" style="margin-left:auto">
+          ${a.id === state.appId ? '' :
+            `<button class="small ghost" onclick="selectApp('${a.id}')">Sec</button>`}
+        </span>
+      </div>
+      <div class="url">${esc(a.apiKeyPreview)} · v${a.version}</div>
+    </div>`).join('');
+}
+
+function selectApp(id) {
+  state.appId = id;
+  localStorage.setItem('hr_appId', id);
+  refreshAll();
+}
+
+// ---------------------------------------------------------------- endpointler
+async function newEndpoint() {
+  if (!state.appId) return toast('Once bir uygulama secin', true);
+  const url = prompt('Endpoint URL:', 'http://chaos-target:8085/sink/flaky?rate=30');
+  if (!url) return;
+  try {
+    await api(`/api/admin/applications/${state.appId}/endpoints`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url, eventTypes: ['*'], description: 'elle eklendi'}),
+    });
+    toast('Endpoint eklendi. Konfigurasyon compacted topic uzerinden dispatcher\'a gidiyor.');
+    loadEndpoints();
+  } catch (e) { toast('Hata: ' + e.message, true); }
+}
+
+async function deleteEndpoint(id) {
+  if (!confirm('Endpoint silinsin mi?')) return;
+  await api('/api/admin/endpoints/' + id, {method: 'DELETE'});
+  toast('Silindi. Compacted topic\'e deleted=true basildi.');
+  loadEndpoints();
+}
+
+async function toggleEndpoint(id, enabled) {
+  await api('/api/admin/endpoints/' + id, {
+    method: 'PATCH', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({enabled: !enabled}),
+  });
+  loadEndpoints();
+}
+
+async function loadEndpoints() {
+  const box = document.getElementById('endpoints');
+  if (!state.appId) { box.innerHTML = '<div class="empty">Once bir uygulama secin</div>'; return; }
+
+  const [eps, health] = await Promise.all([
+    api(`/api/admin/applications/${state.appId}/endpoints`),
+    api(`/api/admin/applications/${state.appId}/health`).catch(() => []),
+  ]);
+  state.endpoints = eps;
+  state.health = Object.fromEntries(health.map(h => [h.endpointId, h]));
+
+  if (!eps.length) { box.innerHTML = '<div class="empty">Endpoint yok</div>'; return; }
+
+  box.innerHTML = eps.map(e => {
+    const h = state.health[e.endpointId] || state.health[e.id] || {};
+    const cb = h.circuitState || 'CLOSED';
+    const cbPill = cb === 'OPEN' ? '<span class="pill bad">devre ACIK</span>'
+                 : cb === 'HALF_OPEN' ? '<span class="pill warn">yari acik</span>' : '';
+    const rate = h.succeeded + h.failed ? Math.round(h.successRate * 100) : null;
+    const dot = !e.enabled ? 'mute' : cb === 'OPEN' ? 'bad'
+              : rate !== null && rate < 80 ? 'warn' : 'ok';
+    return `
+      <div class="ep">
+        <div class="top">
+          <span class="dot ${dot}"></span>
+          <b>${esc(e.description || 'endpoint')}</b>
+          ${cbPill}
+          ${e.enabled ? '' : '<span class="pill mute">kapali</span>'}
+          <span style="margin-left:auto;display:flex;gap:4px">
+            <button class="small ghost" onclick="toggleEndpoint('${e.id}',${e.enabled})">
+              ${e.enabled ? 'Kapat' : 'Ac'}</button>
+            <button class="small ghost" onclick="deleteEndpoint('${e.id}')">Sil</button>
+          </span>
+        </div>
+        <div class="url">${esc(e.url)}</div>
+        <div class="muted" style="font-size:11.5px;margin-top:4px">
+          ${rate !== null ? `basari %${rate} · ` : ''}
+          ${h.succeeded || 0}✓ ${h.failed || 0}✗
+          ${h.shortCircuited ? ` · ${h.shortCircuited} atlandi` : ''}
+          ${h.consecutiveFailures ? ` · ust uste ${h.consecutiveFailures} hata` : ''}
+          ${h.lastLatencyMs != null ? ` · son ${h.lastLatencyMs} ms` : ''}
+          · en fazla ${e.maxAttempts} deneme
+        </div>
+        ${h.lastError ? `<div class="muted mono" style="font-size:11px;margin-top:3px;color:var(--danger)">${esc(h.lastError)}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------- teslimatlar
+async function loadDeliveries() {
+  const status = document.getElementById('filterStatus').value;
+  const q = new URLSearchParams({size: '30'});
+  if (status) q.set('status', status);
+  else if (state.appId) q.set('applicationId', state.appId);
+
+  const page = await api('/api/deliveries?' + q);
+  const rows = page.content || [];
+  const tbody = document.getElementById('deliveries');
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Teslimat yok</td></tr>';
+    return;
+  }
+  const cls = s => s === 'SUCCEEDED' ? 'ok' : s === 'PENDING' ? 'pending'
+                 : s === 'EXHAUSTED' ? 'bad' : 'mute';
+  const label = {SUCCEEDED:'basarili', PENDING:'bekliyor',
+                 EXHAUSTED:'tukendi', DISCARDED:'dusuruldu'};
+
+  tbody.innerHTML = rows.map(d => `
+    <tr>
+      <td><span class="pill ${cls(d.status)}">${label[d.status] || d.status}</span></td>
+      <td class="mono">${esc(d.eventType)}</td>
+      <td class="mono muted">${shortId(d.endpointId)}</td>
+      <td>${d.attempts}</td>
+      <td class="mono">${d.lastStatus ?? '<span class="muted">—</span>'}</td>
+      <td class="muted">${ago(d.updatedAt)}</td>
+      <td><button class="small ghost" onclick="showDelivery('${d.id}')">Detay</button></td>
+    </tr>`).join('');
+}
+
+async function showDelivery(id) {
+  const d = await api('/api/deliveries/' + id);
+  const rows = d.attempts.map(a => `
+    <tr>
+      <td>#${a.attempt}</td>
+      <td class="mono">${a.httpStatus ?? '—'}</td>
+      <td>${a.latencyMs} ms</td>
+      <td class="muted">${new Date(a.occurredAt).toLocaleTimeString('tr-TR')}</td>
+      <td class="mono muted" style="font-size:11px">${esc(a.error || a.responseSnippet || '')}</td>
+    </tr>`).join('');
+
+  const w = window.open('', '_blank', 'width=900,height=650');
+  w.document.write(`
+    <html><head><meta charset="utf-8"><title>Teslimat ${shortId(id)}</title>
+    <style>body{background:#0b0f14;color:#e6edf6;font:13px system-ui;padding:20px}
+    table{width:100%;border-collapse:collapse}td,th{padding:7px;border-bottom:1px solid #1f2836;text-align:left}
+    pre{background:#121822;padding:12px;border-radius:8px;overflow:auto;font-size:12px}
+    h3{color:#39d3a0}</style></head><body>
+    <h3>Teslimat ${esc(id)}</h3>
+    <p>${esc(d.delivery.eventType)} · ${esc(d.delivery.status)} · ${d.delivery.attempts} deneme</p>
+    <h3>Denemeler</h3>
+    <table><tr><th>#</th><th>HTTP</th><th>Sure</th><th>Zaman</th><th>Detay</th></tr>${rows}</table>
+    <h3>Govde</h3><pre>${esc(d.payload || '')}</pre>
+    </body></html>`);
+}
+
+async function replayExhausted() {
+  if (!confirm('Butun tukenmis teslimatlar yeniden kuyruga alinsin mi?')) return;
+  try {
+    const r = await api('/api/deliveries/replay-exhausted', {method: 'POST'});
+    toast(`${r.requeued} teslimat yeniden kuyruga alindi`);
+    setTimeout(refreshAll, 800);
+  } catch (e) { toast('Hata: ' + e.message, true); }
+}
+
+// ---------------------------------------------------------------- zamanlayici + chaos
+async function loadScheduler() {
+  const box = document.getElementById('scheduler');
+  try {
+    const s = await api('/api/scheduler/state');
+    const paused = s.pausedPartitions || {};
+    const tiers = (s.tiers || []).map((t, i) => {
+      const short = 't' + (i + 1);
+      const hit = Object.entries(paused).find(([k]) => k.includes('.' + short + '.'));
+      return `<div class="tier ${hit ? 'paused' : ''}">${short}${
+        hit ? ` · ${Math.ceil(hit[1] / 1000)} sn` : ''}</div>`;
+    }).join('');
+    box.innerHTML = `<div class="tiers">${tiers}</div>
+      <div class="muted" style="font-size:11.5px;margin-top:9px">
+      Sari = partition duraklatilmis, geri sayimda.
+      ${Object.keys(paused).length} duraklatilmis partition.</div>`;
+  } catch { box.innerHTML = '<div class="empty">Zamanlayiciya ulasilamadi</div>'; }
+}
+
+async function loadChaos() {
+  const box = document.getElementById('chaos');
+  try {
+    const list = await api('/sink/received?limit=25');
+    if (!list.length) { box.innerHTML = '<div class="empty">Henuz istek gelmedi</div>'; return; }
+    box.innerHTML = `<table><tr><th>Davranis</th><th>Olay</th><th>Deneme</th>
+      <th>Cevap</th><th>Zaman</th></tr>` + list.map(r => `
+      <tr><td class="mono">${esc(r.behavior)}</td>
+          <td class="mono muted">${esc(r.eventType || '—')}</td>
+          <td>#${r.attempt}</td>
+          <td><span class="pill ${r.respondedWith < 300 ? 'ok' : 'bad'}">${r.respondedWith}</span></td>
+          <td class="muted">${ago(r.at)}</td></tr>`).join('') + '</table>';
+  } catch { box.innerHTML = '<div class="empty">chaos-target kapali</div>'; }
+}
+async function clearChaos() {
+  await api('/sink/received', {method: 'DELETE'});
+  loadChaos();
+}
+
+async function loadStats() {
+  try {
+    const s = await api('/api/deliveries/stats');
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><b style="color:var(--accent)">${s.SUCCEEDED || 0}</b><small>basarili</small></div>
+      <div class="stat"><b style="color:var(--accent2)">${s.PENDING || 0}</b><small>bekleyen</small></div>
+      <div class="stat"><b style="color:var(--danger)">${s.EXHAUSTED || 0}</b><small>tukenmis</small></div>
+      <div class="stat"><b class="muted">${s.DISCARDED || 0}</b><small>dusurulmus</small></div>`;
+  } catch { }
+}
+
+function refreshAll() {
+  loadStats(); loadApps(); loadEndpoints(); loadDeliveries();
+  loadScheduler(); loadChaos();
+}
+
+if (state.apiKey) {
+  document.getElementById('keyBox').innerHTML =
+    `<div class="key"><b>Kayitli API anahtari</b><br>${esc(state.apiKey)}</div>`;
+}
+refreshAll();
+setInterval(() => { loadStats(); loadDeliveries(); loadScheduler(); loadChaos(); }, 2000);
+setInterval(loadEndpoints, 4000);
+</script>
+</body>
+</html>
