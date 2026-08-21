@@ -1,0 +1,72 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 30s
+        pool:
+          # Bosta duran baglantilari tahliye et. DNS duzeltmesiyle birlikte,
+          # yeniden olusturulan bir servise takilip kalmayi tamamen bitirir:
+          # eski IP'ye acilmis olu baglantilar havuzda beklemez.
+          type: elastic
+          max-idle-time: 15s
+          max-life-time: 60s
+          eviction-interval: 30s
+      # Tarayici arayuzu nginx'ten geliyor ama gelistirirken
+      # dogrudan gateway'e de vurulabilsin.
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+      # Yollarin sirasi ONEMLI: Spring ilk eslesen rotayi kullanir.
+      # Ozelden genele dizilir.
+      routes:
+        - id: admin
+          uri: ${ADMIN_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/admin/**
+
+        - id: deliveries
+          uri: ${DISPATCHER_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/deliveries/**
+
+        - id: scheduler
+          uri: ${SCHEDULER_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/scheduler/**
+
+        - id: ingest
+          uri: ${INGEST_URL:http://localhost:8082}
+          predicates:
+            - Path=/v1/**
+
+        - id: chaos
+          uri: ${CHAOS_URL:http://localhost:8085}
+          predicates:
+            - Path=/sink/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      service: gateway
+
+logging:
+  level:
+    dev.hookrelay: INFO
