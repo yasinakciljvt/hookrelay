@@ -84,6 +84,19 @@ class IngestFlowIT {
     @Autowired OutboxRepository outbox;
 
     private static final UUID APP_ID = UUID.randomUUID();
+
+    // Endpoint kimlikleri SABIT.
+    //
+    // Ilk yazilisinda her @BeforeEach icinde UUID.randomUUID() cagriliyordu.
+    // Redis konteyneri sinif boyunca yasadigi ve hr:app:{id}:eps kumesi hic
+    // temizlenmedigi icin endpoint sayisi her testte ikiser artiyordu:
+    // 1. test 2 endpoint gorurken 3. test 6 goruyordu ve deliveryCount
+    // beklentileri tutmuyordu. Testin kendisi sizintiliydi.
+    //
+    // Sabit kimlikle put() ayni anahtarin uzerine yaziyor, kume hep 2 kalir.
+    private static final UUID EP_ALL  = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID EP_PAID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+
     private String apiKey;
 
     @BeforeEach
@@ -96,12 +109,18 @@ class IngestFlowIT {
                 true, false, 1));
 
         // Iki endpoint: biri her seye abone, digeri sadece order.paid'e
-        endpoints.put(new EndpointConfig(UUID.randomUUID(), APP_ID,
+        endpoints.put(new EndpointConfig(EP_ALL, APP_ID,
                 "http://ornek/hepsi", "whsec_1", Set.of("*"),
                 true, false, 0, 6, 10_000, 1));
-        endpoints.put(new EndpointConfig(UUID.randomUUID(), APP_ID,
+        endpoints.put(new EndpointConfig(EP_PAID, APP_ID,
                 "http://ornek/odeme", "whsec_2", Set.of("order.paid"),
                 true, false, 0, 6, 10_000, 1));
+
+        // Testin kendi varsayimini dogrula: tam iki endpoint gorunmeli.
+        // Bu satir olmasaydi yukaridaki sizinti sessizce geri gelebilirdi.
+        assertThat(endpoints.listByApplication(APP_ID))
+                .as("her test tam iki endpoint ile baslamali")
+                .hasSize(2);
     }
 
     @Test
