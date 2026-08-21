@@ -19,7 +19,6 @@ import java.util.concurrent.Semaphore;
  * yavasligina donusur.
  *
  * COZUM
- * -----
  * Her endpoint'e ayri bir kota: ayni anda en fazla N istek. Kota
  * dolduysa mesaj beklemez - kuyruga geri konur, is parcacigi serbest
  * kalir ve baska musterilere hizmet etmeye devam eder.
