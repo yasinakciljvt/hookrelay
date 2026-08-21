@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      # verify = surefire (*Test) + failsafe (*IT) + package.
+      # *IT testleri Testcontainers kullanir; GitHub runner'inda Docker hazir.
+      - name: Test ve paketleme
+        run: mvn -B clean verify
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: surefire-raporlari
+          path: '**/target/*-reports/*'
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # Alti servisin de imaji derleniyor mu - yayinlanmiyor, sadece dogrulama.
+      - name: Imajlari derle
+        run: |
+          for s in gateway admin-api ingest-api dispatcher retry-scheduler chaos-target; do
+            docker build --build-arg SERVICE=$s -t hookrelay-$s:ci .
+          done
